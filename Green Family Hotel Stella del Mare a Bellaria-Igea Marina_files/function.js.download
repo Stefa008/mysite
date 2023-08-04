@@ -1,0 +1,454 @@
+/**
+ *
+ * Custom function
+ *
+ */
+
+( function($){
+
+	/*
+	 *	Funzione per rendere un box tutto cliccabile. ATTENZIONE: all'interno del box deve esserci un unico link non in target blank
+	 */
+
+	function allClick(){
+
+		var clickbox = $('.allclick');
+
+		clickbox.each(function(){
+			var $this = $(this);
+			$this.css('cursor','pointer');
+			$this.find('a').click(function(event){ event.preventDefault(); });
+
+			$this.click(function(){
+				if( $this.is('.blank') )	window.open( $('a',this).attr('href'), '_blank'	);
+				else						window.open( $('a',this).attr('href'), '_self' );
+			});
+
+		});
+	}
+
+	/*
+	 *	Caricamento ajax delle immagini dal marcatore [data-loadimg] e dei background dal marcatore [data-loadbackground]
+	 */
+
+	function loadAsynchronousImage(){
+
+		$('*[data-loadimg]').each(function(){
+			var box = $(this),
+				src = box.data('loadimg'),
+				alt = '',
+				img = new Image();
+
+			if(box.data('alt'))		alt = box.data('alt');
+
+			$(img).load(function(){
+				box.append('<img src="' + src + '" alt="' + alt + '" width="' + img.width + '" height="' + img.height + '">');
+				$('img',box).hide().fadeIn();
+			}).attr('src',src);
+		});
+
+		$('*[data-loadbackground]').each(function(){
+			var box = $(this),
+				src = box.data('loadbackground');
+
+			box.css({
+				'background-image':'url(' + src + ')',
+				'background-repeat': 'no-repeat',
+				'background-position': 'center center'
+			});
+
+			if(box.has(['data-position'])){
+				box.css({ 'background-position': box.data('position') });
+			}
+
+			if(box.has(['data-attachment'])){
+				if( box.data('attachment') == 'fixed' && !( $('body').is('.tablet') || $('body').is('.mobile') ) ) 		box.css({ 'background-attachment': box.data('attachment') });
+			}
+
+			if(box.has(['data-repeat']))		box.css({ 'background-repeat': box.data('repeat') });
+		});
+	}
+
+
+	/*
+	 *	Funzione per la gestione dei bottoni "condividi" legati ai social
+	 */
+
+	function socialOpen(){
+		$('[data-socialurl]').each(function(){
+			var $this = $(this),
+				url = $this.attr('data-socialurl');
+
+			$this.click(function(){ window.open(url ,'' ,'width=500'); });
+		});
+	}
+
+
+	/*
+	 *	Funzione per l'apertura di una finestra modale tramite cookie
+	 */
+	 /*
+	function openModal(){
+		if( !Cookies.get( 'openmodal' ) ){
+			$('#onloadmodal').modal();
+			Cookies.set( 'openmodal', 'no', { path: '' } );
+		}
+	}
+	*/
+
+
+	/*
+	 *	Funzione per la formattazione delle tabelle con classe listino tramite le classi di bootstrap
+	 */
+
+	function responsiveTable(){
+		$('.entry-content table').each(function(){
+			var $this = $(this);
+			$this.addClass('table table-striped');
+			$this.wrap( '<div class="table-responsive"></div>' );
+		});
+	}
+
+
+	/*
+	 *	Animazione link con ancora
+	 */
+
+	function linkScroll(){
+		$('a[href^="#"]').each(function(){
+			$(this).click(function(event){
+				event.preventDefault();
+				var anchor = $(this).attr('href');
+				if( anchor != '#'){
+					$(anchor).animatescroll({
+						padding: 0,
+						onScrollStart: function(){
+							if( $j('html.slideout-open') )	$( '.slideout-toggle-button' ).trigger('click');
+						}
+					});
+				}
+			});
+		});
+	}
+
+
+	/*
+	 *	Animazione header allo scroll
+	 */
+
+	function scrollAnimations(){
+		var header = $('header'),
+			scrollpoint = 0;
+
+		if( !$j('body.mobile') ){
+			if( $(window).width() > 767 ){
+
+				$(window).scroll(function(){
+					var scrolltop = $(window).scrollTop();
+
+					if( scrolltop >= 150 )	header.addClass('scroll');
+					else 					header.removeClass('scroll');
+				});
+
+			}
+		}
+
+	}
+
+
+	/*
+	 *	Gestione apertua e chiusura dello slideout menu
+	 */
+
+	function toggleSlideoutMenu(){
+
+		$('#menu.mobile-menu').show();
+
+		var slideout = new Slideout({
+			'panel': document.getElementById('page'),
+			'menu': document.getElementById('menu'),
+			'padding': 256,
+			'tolerance': 70
+		});
+
+		$('.slideout-toggle-button').click(function(){
+			slideout.toggle();
+		});
+
+		$('.slideout-menu .menu-item-has-children').each(function(){
+
+			var $this = $(this);
+
+			$this.children('a').after('<span class="sub-menu-button"><i class="fa fa-caret-down"></i></span><div class="clearfix"></div>');
+
+			$this.children('.sub-menu-button').click(function(){
+				$(this).siblings('ul.sub-menu').slideToggle();
+			});
+
+			if( $this.children('a').attr('href') == '#'){
+				$this.children('a').click(function(event){
+					event.preventDefault();
+					$(this).siblings('ul.sub-menu').slideToggle();
+				});
+			}
+
+		});
+
+	}
+
+
+	/*
+	 *	Attivazione del lightbox
+	 */
+
+	function lightGalleryActivator(){
+
+		$(document).lightGallery({
+			selector 			: '[data-rel="lightgallery"]',
+			//mode 				: 'lg-zoom-in',
+			download			: false,
+			fullScreen			: false,
+			actualSize			: false,
+			counter				: false,
+			mousewheel 			: false,
+			autoplay 			: false,
+			autoplayControls	: false,
+			showThumbByDefault	: false,
+			hash				: false,
+			getCaptionFromTitleOrAlt : false,
+			thumbnail			: false,
+		});
+
+		$('.container-tp-gallery').each(function(){
+
+			$(this).lightGallery({
+				selector 			: '[data-rel="lightgallery-gallery"]',
+				download			: false,
+				fullScreen			: false,
+				actualSize			: false,
+				counter				: false,
+				mousewheel 			: false,
+				autoplay 			: false,
+				autoplayControls	: false,
+				showThumbByDefault	: false,
+				hash				: false,
+				getCaptionFromTitleOrAlt : false,
+				thumbnail			: false,
+			});
+
+		});
+
+		$(document).on('onAfterOpen.lg',function(event){
+
+			$('html').css({
+				'overflow' : 'hidden'
+			});
+
+		});
+
+		$(document).on('onCloseAfter.lg',function(event){
+
+			$('html').css({
+				'overflow' : 'visible'
+			});
+
+		});
+	}
+
+
+	/*
+	 *	Gestione Bootstrap Datapicker
+	 */
+
+	function datepickerActivator(){
+
+		//var datepicker = $.fn.datepicker.noConflict(); // return $.fn.datepicker to previously assigned value
+		//$.fn.bootstrapDP = datepicker;                 // give $().bootstrapDP the bootstrap-datepicker functionality
+
+		$('input[type="text"].wpcf7-date').each(function(){
+
+			$this = $(this);
+
+			$this.datepicker({
+				format: "dd/mm/yyyy",
+				language: "it",
+				orientation: "auto left",
+				todayHighlight: true,
+				autoclose: true,
+				beforeShowDay: function (date){
+
+                    if(date.getMonth() == (new Date()).getMonth())
+						if(date.getDate() < (new Date()).getDate())
+							return false;
+
+				}
+			});
+
+		});
+
+		/* Update dell'attributo value degli input */
+
+		$('input[type="text"].wpcf7-date').datepicker().on('changeDate', function(e) {
+			$(this).attr('value', e.target.value);
+		});
+
+	}
+
+
+	/*
+	 *	Funzione per la gestione dei bambini nel calcola preventivo
+	 */
+
+	function quoteChildrenSelect(){
+
+		$('[data-bambini]').each(function(){
+			var $this = $(this).find('select.wpcf7-select'),
+				container = $('#' + $(this).data('bambini') ),
+				items = container.children();
+
+			$this.change(function(){
+
+				var i = 1,
+					n = container.children().length;
+
+				items.each(function( index ){
+
+					$(this).addClass('ciao' + index);
+
+					if( index < $('option:selected', $this).val() )		$(this).removeClass('hidden');
+					else												$(this).addClass('hidden');
+				});
+
+			});
+
+			$this.trigger("change");
+
+		});
+
+	}
+
+
+	/*
+	 *	Attivazione e gestione degli slider tramite Slick
+	 */
+
+	function activateSlickCarousel(){
+
+		$('[data-slick="header-slider"]').slick({
+			fade			: 	true,
+			slide			: 	".item",
+			infinite		: 	true,
+			speed			: 	2000,
+			autoplay		: 	true,
+			autoplaySpeed	: 	4000,
+			pauseOnHover	: 	false,
+			arrows			: 	false,
+			dots			:	true,
+			customPaging	: 	function(slider, i){ return ''; },
+			appendDots		: 	$('.container-pager'),
+		});
+
+		$('[data-slick="carousel"]').slick({
+			infinite		: 	true,
+			slide			: 	'.item',
+			slidesToScroll	: 	1,
+			arrows			: 	true,
+			prevArrow		:	'<div class="slick-prev"></div>',
+			nextArrow		:	'<div class="slick-next"></div>',
+			centerMode		: 	true,
+			variableWidth	: 	true,
+			autoplay		:	true,
+			autoplaySpeed	:	4000,
+			speed			:	1500,
+			slidesToShow	: 	3,
+		});
+
+	}
+
+
+
+	/*****************************************************************************************/
+
+	function toConsole(string){
+		if((typeof window.console=='undefined')){ alert(string); }
+		else console.log(string);
+	}
+
+	function $j(argument){
+		var result = jQuery(argument);
+		if (result.length == 0) return null;
+		else return result;
+	}
+
+
+	$j(document).ready(function(){
+
+		//Cookies.remove('tpcookieacceptance');
+
+		// $.tpcookieacceptance({
+		// 	message : $('#tpcookieacceptance').data('message'),
+		// 	closeButtonText : $('#tpcookieacceptance').data('closebuttontext'),
+		// 	policyButtonText : $('#tpcookieacceptance').data('policybuttontext'),
+		// 	policyURL : $('#tpcookieacceptance').data('policyurl'),
+		// 	position : $('#tpcookieacceptance').data('position'),
+		// 	fixed : $('#tpcookieacceptance').data('fixed'),
+		// 	acceptOnScroll : $('#tpcookieacceptance').data('acceptonscroll'),
+		// });
+
+		if( $j('body.mobile') ){
+
+			toggleSlideoutMenu();
+
+		}
+
+		scrollAnimations();
+		allClick();
+		activateSlickCarousel();
+		loadAsynchronousImage();
+		lightGalleryActivator();
+		linkScroll();
+		responsiveTable();
+	});
+
+
+	$j(window).on('load',function(){
+
+		$(window).trigger('scroll');
+		socialOpen();
+
+		/*
+		*	Contact Form 7 Custom Validator
+		*
+		*		Descrizione > attivazione della funzione wpcf7Check() per la convalida personalizzata
+		*		dei form Contact Form 7 o di qualunque forms attraversio la classe "wpcf7-form" post sul tag form.
+		*
+		*/
+		if( $j('.wpcf7-form') ){
+			$('.wpcf7-form').each(function(){ $(this).wpcf7Check(); });
+			datepickerActivator();
+			quoteChildrenSelect();
+		}
+
+		/* Attraverso il Google Loader carico il modulo mappa */
+
+		if( $j('#map-location') ){
+
+			$.getScript('https://www.google.com/jsapi', function(){
+				google.load('maps', '3', { other_params: 'sensor=true&language=it&key=AIzaSyD1JtaBHuZR_nnVXh_UsyA-vPd6Pjgg6JQ', callback: function(){
+					$('#map-location').setCustomMap();
+				}});
+			});
+
+		}
+
+		//openModal();
+
+	});
+
+	$j(window).resize(function(){
+
+
+
+	});
+
+} ) ( jQuery );

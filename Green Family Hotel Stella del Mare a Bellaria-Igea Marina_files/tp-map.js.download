@@ -1,0 +1,185 @@
+
+
+(function($){
+
+	$.fn.setCustomMap = function(settings) {  
+
+		settings = $.extend({
+
+		},settings);
+		
+		var mapID = $(this),
+			map,
+			geocoder = new google.maps.Geocoder(),
+			marker,
+			start_route,
+			end_route,
+			address = mapID.attr('data-location'),
+			message = mapID.attr('data-message'),
+			zoom = mapID.attr('data-zoom');
+		
+		/*
+		 *	Funzione di inizializzazione della mappa
+		 */		
+		function setCustomMapInit(){
+		
+			if(address){
+				
+				if(!zoom) zoom = 15;
+			
+				geocoder.geocode( {'address': address}, function(results, status){
+				
+					if (status == google.maps.GeocoderStatus.OK) {
+					
+						end_route = results[0].geometry.location;
+						
+						var myOptions = {
+							zoom: parseInt(zoom),
+							center: end_route,
+							navigationControl: true,
+							mapTypeControl: false,
+							mapTypeId: google.maps.MapTypeId.ROADMAP,
+							panControl: false,
+							zoomControl: true,
+							zoomControlOptions: {
+								style: google.maps.ZoomControlStyle.SMALL,
+								position: google.maps.ControlPosition.LEFT_TOP
+							},
+							scaleControl: true,
+							streetViewControl: true,
+							fullscreenControl: true,
+							draggable: true,
+							disableDoubleClickZoom: false,
+							scrollwheel: false,
+							disableDefaultUI: true
+						};
+						
+						//attivazione mappa
+						map = new google.maps.Map(document.getElementById(mapID.attr('id')), myOptions);
+						
+						/*
+						map.set('styles', [
+							{
+								featureType: "poi",
+								elementType: "labels",
+								stylers: [{ visibility: "off" }]
+							},
+							{
+								featureType: "all",
+								stylers: [{ invert_lightness: false }, { saturation: -80 }, { lightness: 0 }, { hue: '#704214' }]
+							}
+						]);
+						*/
+						
+						//settaggio marker
+						marker = new google.maps.Marker({
+							position: results[0].geometry.location,
+							map: map,
+							draggable:false
+						});
+						
+						//inserimento marker nella mappa
+						marker.setMap(map);
+						
+						if(message){
+							addInfo(marker, message, results[0].geometry.location, 1);
+						}
+						
+						getStartPosition();
+						
+						google.maps.event.trigger('resize', map);
+
+					} else {
+						alert("Geocode was not successful for the following reason: " + status);
+					}
+				});
+
+			}
+			
+		}
+		
+		/*
+		 *	Funzione di creazione del infowindow
+		 *	INPUT: macker, messaggio da visualizzare all'interno dell'infowindow, posizione del puntatore, apertura automatica dell'infowindow (1) o al click (0).
+		 */
+		function addInfo(marker, message, position, open){
+		
+			var infowindow = new google.maps.InfoWindow({ 
+				content: message,
+				position: position
+			});
+			
+			if(open) infowindow.open(map,marker);
+			
+			google.maps.event.addListener(marker, 'click', function() {
+				infowindow.open(map,marker);
+			});
+				
+		}
+		
+		/*
+		 *	Funzione di generazione del percorso
+		 */		
+		function getStartPosition(){
+		
+			var route_container = $('#map-route');
+		
+			route_container.find('button').click( function(){
+			
+				var start = route_container.find("input[type='text']").attr("value");
+				
+				geocoder.geocode( {'address': start}, function(results, status){
+				
+					if (status == google.maps.GeocoderStatus.OK) {
+						
+						start_route = results[0].geometry.location;
+						
+						//map.setCenter(start_route);
+						
+						var marker_start = 	new google.maps.Marker({
+												map: map, 
+												position: start_route,
+												draggable:false
+											});
+											
+						var directionsService = new google.maps.DirectionsService(),
+							directionsDisplay = new google.maps.DirectionsRenderer();
+				
+						//settaggio marker
+						var marker_start = new google.maps.Marker({
+							position: end_route,
+							map: map,
+							draggable:false
+						});
+							
+						var request = {
+							origin: start_route, 
+							destination: end_route,
+							travelMode: google.maps.DirectionsTravelMode.DRIVING
+						};
+							
+						directionsDisplay.setMap(map);
+						directionsDisplay.setPanel(document.getElementById('route'));
+						
+						directionsService.route(request, function(response, status){
+						
+							if (status == google.maps.DirectionsStatus.OK){
+								directionsDisplay.setDirections(response);
+								$('#map-route').hide();
+							}
+							
+						});	
+
+					} else {
+						alert("Geocode was not successful for the following reason: " + status);
+					}
+				});
+				
+			});
+		}
+		
+		return setCustomMapInit();
+	
+	};
+
+})(jQuery);
